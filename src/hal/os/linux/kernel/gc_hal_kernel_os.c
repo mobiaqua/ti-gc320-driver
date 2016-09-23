@@ -5511,13 +5511,11 @@ gckOS_CacheClean(
         return gcvSTATUS_OK;
     }
 
-    /* @tga dmac_map_area is not exported starting from k4.3
-     * using arm_dma_ops ops. Ideally place this in platform
-     * specific function above.
+    /* the below is not valid for >k4.3, handling this in platform
+     * cache op
      */
-    arm_dma_ops.sync_single_for_device(gcvNULL,
-            (dma_addr_t)Physical, Bytes, DMA_TO_DEVICE);
 #if 0
+
 #if !gcdCACHE_FUNCTION_UNIMPLEMENTED
 #ifdef CONFIG_ARM
 
@@ -5553,6 +5551,7 @@ gckOS_CacheClean(
               DMA_TO_DEVICE);
 #endif
 #endif
+
 #endif
 
     /* Success. */
@@ -5623,13 +5622,11 @@ gckOS_CacheInvalidate(
         return gcvSTATUS_OK;
     }
 
-    /* @tga `dmac_map_area` function/macro is no longer exported starting
-     * from k4.3. Using dma mappings API ops instead, ideally these need
-     * to go inside platform specific ops above. TODO
+    /* the below is not valid for >k4.3, handling this in platform
+     * cache op
      */
-    arm_dma_ops.sync_single_for_cpu(gcvNULL,
-            (dma_addr_t)Physical, Bytes, DMA_FROM_DEVICE);
 #if 0
+
 #if !gcdCACHE_FUNCTION_UNIMPLEMENTED
 #ifdef CONFIG_ARM
 
@@ -5661,6 +5658,7 @@ gckOS_CacheInvalidate(
               DMA_FROM_DEVICE);
 #endif
 #endif
+
 #endif
 
     /* Success. */
@@ -5731,6 +5729,11 @@ gckOS_CacheFlush(
         return gcvSTATUS_OK;
     }
 
+    /* the below is not valid for >k4.3, handling this in platform
+     * cache op
+     */
+#if 0
+
 #if !gcdCACHE_FUNCTION_UNIMPLEMENTED
 #ifdef CONFIG_ARM
     /* Inner cache. */
@@ -5756,6 +5759,8 @@ gckOS_CacheFlush(
               Bytes,
               DMA_BIDIRECTIONAL);
 #endif
+#endif
+
 #endif
 
     /* Success. */
