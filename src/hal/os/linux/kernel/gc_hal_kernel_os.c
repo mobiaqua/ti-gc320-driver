@@ -4813,29 +4813,45 @@ OnError:
 
                     for (i = 0; i < pageCount; i++)
                     {
-                        pgd_t * pgd = pgd_offset(current->mm, logical);
-                        pud_t * pud = pud_offset(pgd, logical);
+                        pgd_t *pgd;
+                        pud_t *pud;
+                        pmd_t *pmd;
 
-                        if (pud)
+                        pgd = pgd_offset(vma->vm_mm, logical);
+                        if (pgd_none(*pgd) || pgd_bad(*pgd))
                         {
-                            pmd_t * pmd = pmd_offset(pud, logical);
-                            pte = pte_offset_map_lock(current->mm, pmd, logical, &ptl);
-                            if (!pte)
-                            {
-                                gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
-                            }
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pgd entry at page %d\n", i);
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
                         }
-                        else
+
+                        pud = pud_offset(pgd, logical);
+                        if (pud_none(*pud) || pud_bad(*pud))
                         {
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pud entry at page %d\n", i);
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        pmd = pmd_offset(pud, logical);
+                        if (pmd_none(*pmd) || pmd_bad(*pmd))
+                        {
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pmd entry at page %d\n", i);
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        pte = (pte_t *)pte_offset_map_lock(vma->vm_mm, pmd, logical, &ptl);
+                        if (pte_none(*pte) || !pte_present(*pte) || !pte_write(*pte))
+                        {
+                            pte_unmap_unlock(pte, ptl);
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pte entry at page %d\n", i);
+
                             gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
                         }
 
                         pages[i] = pte_page(*pte);
-                        /*
-                         * inc refcount for the page, refcount is decremented by
-                         * the kernel when the vma is unmapped.
-                         */
-                        get_page(pages[i]);
                         pte_unmap_unlock(pte, ptl);
 
                         /*
