@@ -4740,12 +4740,9 @@ OnError:
             /* Get the user pages. */
             down_read(&current->mm->mmap_sem);
 
-            result = get_user_pages(current,
-                    current->mm,
-                    memory & PAGE_MASK,
+            result = get_user_pages(memory & PAGE_MASK,
                     pageCount,
-                    1,
-                    0,
+                    FOLL_WRITE,
                     pages,
                     gcvNULL
                     );

@@ -345,8 +345,8 @@ cache_op_on_logical(gctPOINTER logical, gctSIZE_T bytes,
     /* lock down user memory */
     down_read(&current->mm->mmap_sem);
 
-    numPagesMapped = get_user_pages(current, current->mm,
-            startAddr, pageCount, 1, 0, pages, gcvNULL);
+    numPagesMapped = get_user_pages(
+            startAddr, pageCount, FOLL_WRITE, pages, gcvNULL);
 
     if (numPagesMapped == pageCount) {
         for (i = 0; i < pageCount; i++) {
