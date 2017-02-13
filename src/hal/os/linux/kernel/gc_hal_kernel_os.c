@@ -4766,7 +4766,7 @@ OnError:
                             break;
                         }
 
-                        page_cache_release(pages[i]);
+                        put_page(pages[i]);
                         pages[i] = gcvNULL;
                     }
 
@@ -5093,7 +5093,7 @@ OnError:
                 {
                     break;
                 }
-                page_cache_release(pages[i]);
+                put_page(pages[i]);
             }
         }
 
@@ -5301,7 +5301,7 @@ OnError:
 
                 if (pfn_valid(page_to_pfn(pages[i])))
                 {
-                    page_cache_release(pages[i]);
+                    put_page(pages[i]);
                 }
             }
         }

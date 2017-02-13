@@ -367,7 +367,7 @@ cache_op_on_logical(gctPOINTER logical, gctSIZE_T bytes,
                 if (pages[i] == gcvNULL)
                     break;
 
-                page_cache_release(pages[i]);
+                put_page(pages[i]);
                 pages[i] = gcvNULL;
             }
             numPagesMapped = 0;
