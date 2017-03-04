@@ -183,7 +183,7 @@ _NonContiguousAlloc(
 
     if (!pages)
     {
-        pages = vmalloc(size);
+        pages = __vmalloc(size, GFP_KERNEL | __GFP_DMA32, PAGE_KERNEL);
 
         if (!pages)
         {
@@ -194,7 +194,7 @@ _NonContiguousAlloc(
 
     for (i = 0; i < NumPages; i++)
     {
-        p = alloc_page(GFP_KERNEL | __GFP_HIGHMEM | gcdNOWARN);
+        p = alloc_page(GFP_KERNEL | __GFP_DMA32 | gcdNOWARN);
 
         if (!p)
         {
@@ -381,7 +381,7 @@ _DefaultAlloc(
         if (Mdl->u.contiguousPages == gcvNULL)
         {
             Mdl->u.contiguousPages =
-                alloc_pages(GFP_KERNEL | __GFP_HIGHMEM | gcdNOWARN, order);
+                alloc_pages(GFP_KERNEL | __GFP_DMA32 | gcdNOWARN, order);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 27)
             Mdl->exact = gcvFALSE;

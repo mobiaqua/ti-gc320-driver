@@ -706,7 +706,7 @@ gckOS_Construct(
         gcmkONERROR(gcvSTATUS_OUT_OF_MEMORY);
     }
 
-    os->paddingPage = alloc_page(GFP_KERNEL | __GFP_HIGHMEM | gcdNOWARN);
+    os->paddingPage = alloc_page(GFP_KERNEL | __GFP_DMA32 | gcdNOWARN);
     if (os->paddingPage == gcvNULL)
     {
         /* Out of memory. */
@@ -1073,7 +1073,8 @@ gckOS_AllocateMemory(
 
     if (Bytes > PAGE_SIZE)
     {
-        memory = (gctPOINTER) vmalloc(Bytes);
+        memory = (gctPOINTER) __vmalloc(Bytes,
+			GFP_KERNEL | __GFP_DMA32, PAGE_KERNEL);
     }
     else
     {
