@@ -62,6 +62,10 @@
 #include <linux/fs.h>
 #include <linux/mm.h>
 #include <linux/sched.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,11,0)
+#include <linux/sched/signal.h>
+#include <linux/nmi.h>
+#endif
 #include <linux/signal.h>
 #ifdef FLAREON
 #   include <asm/arch-realview/dove_gpio_irq.h>
@@ -75,6 +79,9 @@
 
 #ifdef MODVERSIONS
 #  include <linux/modversions.h>
+#endif
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,12,0)
+#include <linux/uaccess.h>
 #endif
 #include <asm/io.h>
 #include <asm/uaccess.h>

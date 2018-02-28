@@ -7039,7 +7039,11 @@ gckOS_WaitSignal(
 #else
         DECLARE_WAITQUEUE(wait, current);
         wait.flags |= WQ_FLAG_EXCLUSIVE;
-        __add_wait_queue_tail(&signal->obj.wait, &wait);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
+        __add_wait_queue_entry_tail(&signal->obj.wait, &wait);
+#else
+	__add_wait_queue_tail(&signal->obj.wait, &wait);
+#endif
 #endif
 
         while (gcvTRUE)
