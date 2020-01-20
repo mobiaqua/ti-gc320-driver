@@ -1275,7 +1275,7 @@ gckOS_MapMemory(
         }
 
 #ifndef NO_DMA_COHERENT
-        if (dma_mmap_writecombine(gcvNULL,
+        if (dma_mmap_wc(gcvNULL,
                     mdlMap->vma,
                     mdl->addr,
                     mdl->dmaHandle,
@@ -1596,7 +1596,7 @@ gckOS_AllocateNonPagedMemory(
 #ifdef CONFIG_ARM64
     addr = dma_alloc_coherent(gcvNULL,
 #else
-    addr = dma_alloc_writecombine(gcvNULL,
+    addr = dma_alloc_wc(gcvNULL,
 #endif
             mdl->numPages * PAGE_SIZE,
             &mdl->dmaHandle,
@@ -1880,7 +1880,7 @@ gceSTATUS gckOS_FreeNonPagedMemory(
 #ifdef CONFIG_ARM64
     dma_free_coherent(gcvNULL,
 #else
-    dma_free_writecombine(gcvNULL,
+    dma_free_wc(gcvNULL,
 #endif
             mdl->numPages * PAGE_SIZE,
             mdl->addr,
