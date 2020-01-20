@@ -168,7 +168,7 @@ _NonContiguousAlloc(
     gcmkHEADER_ARG("NumPages=%lu", NumPages);
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 32)
-    if (NumPages > totalram_pages)
+    if (NumPages > totalram_pages())
 #else
     if (NumPages > num_physpages)
 #endif
