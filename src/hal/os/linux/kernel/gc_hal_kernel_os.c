@@ -4579,7 +4579,7 @@ gckOS_WriteMemory(
     gcmkVERIFY_ARGUMENT(Address != gcvNULL);
 
     /* Write memory. */
-    if (access_ok(VERIFY_WRITE, Address, 4))
+    if (access_ok(Address, 4))
     {
         /* User address. */
         if(put_user(Data, (gctUINT32*)Address))
