@@ -3398,12 +3398,12 @@ gckOS_GetTime(
     OUT gctUINT64_PTR Time
     )
 {
-    struct timeval tv;
+    struct timespec64 ts;
     gcmkHEADER();
 
     /* Return the time of day in microseconds. */
-    do_gettimeofday(&tv);
-    *Time = (tv.tv_sec * 1000000ULL) + tv.tv_usec;
+    ktime_get_real_ts64(&ts);
+    *Time = (ts.tv_sec * 1000000ULL) + (ts.tv_nsec / NSEC_PER_USEC);
 
     gcmkFOOTER_NO();
     return gcvSTATUS_OK;
