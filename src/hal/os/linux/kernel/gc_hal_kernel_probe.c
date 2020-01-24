@@ -957,11 +957,7 @@ static int drv_init(void)
         gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
     }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,27)
     device_create(device_class, NULL, MKDEV(major, 0), NULL, DEVICE_NAME);
-#else
-    device_create(device_class, NULL, MKDEV(major, 0), DEVICE_NAME);
-#endif
 
     galDevice = device;
     gpuClass  = device_class;
@@ -1034,11 +1030,7 @@ static void drv_exit(void)
     module_exit(drv_exit);
 #else
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 static int gpu_probe(struct platform_device *pdev)
-#else
-static int __devinit gpu_probe(struct platform_device *pdev)
-#endif
 {
     int ret = -ENODEV;
     gcsMODULE_PARAMETERS moduleParam = {
@@ -1074,6 +1066,7 @@ static int __devinit gpu_probe(struct platform_device *pdev)
 
     gcmkHEADER();
 
+    /* this pdev is coming from DT */
     platform.device = pdev;
 
     if (platform.ops->getPower)
@@ -1108,11 +1101,7 @@ static int __devinit gpu_probe(struct platform_device *pdev)
     return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
 static int gpu_remove(struct platform_device *pdev)
-#else
-static int __devexit gpu_remove(struct platform_device *pdev)
-#endif
 {
     gcmkHEADER();
 
@@ -1252,12 +1241,7 @@ static const struct dev_pm_ops gpu_pm_ops = {
 
 static struct platform_driver gpu_driver = {
     .probe      = gpu_probe,
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 8, 0)
     .remove     = gpu_remove,
-#else
-    .remove     = __devexit_p(gpu_remove),
-#endif
-
     .suspend    = gpu_suspend,
     .resume     = gpu_resume,
 
