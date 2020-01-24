@@ -240,10 +240,12 @@ _AdjustParam(
 }
 
 static gceSTATUS
-cache_op_on_page(struct page *page, enum dma_data_direction dir)
+cache_op_on_page(gckPLATFORM Platform, struct page *page,
+        enum dma_data_direction dir)
 {
     if (!PageHighMem(page) && page_to_phys(page)) {
-        dma_sync_single_for_device(gcvNULL,
+
+        dma_sync_single_for_device(&Platform->device->dev,
                 page_to_phys(page),
                 PAGE_SIZE,
                 dir);
@@ -255,7 +257,8 @@ cache_op_on_page(struct page *page, enum dma_data_direction dir)
 }
 
 static gceSTATUS
-cache_op_on_mdl(PLINUX_MDL mdl, enum dma_data_direction dir)
+cache_op_on_mdl(gckPLATFORM Platform, PLINUX_MDL mdl,
+        enum dma_data_direction dir)
 {
     gceSTATUS status = gcvSTATUS_OK;
     uint32_t i = 0;
@@ -270,7 +273,7 @@ cache_op_on_mdl(PLINUX_MDL mdl, enum dma_data_direction dir)
             page = mdl->u.nonContiguousPages[i];
         }
 
-        status = cache_op_on_page(page, dir);
+        status = cache_op_on_page(Platform, page, dir);
     }
     return status;
 }
@@ -317,7 +320,7 @@ OnError:
 }
 
 static gceSTATUS
-cache_op_on_logical(gctPOINTER logical, gctSIZE_T bytes,
+cache_op_on_logical(gckPLATFORM Platform, gctPOINTER logical, gctSIZE_T bytes,
         enum dma_data_direction dir)
 {
     gceSTATUS status = gcvSTATUS_OK;
@@ -350,7 +353,7 @@ cache_op_on_logical(gctPOINTER logical, gctSIZE_T bytes,
 
     if (numPagesMapped == pageCount) {
         for (i = 0; i < pageCount; i++) {
-            status = cache_op_on_page(pages[i], dir);
+            status = cache_op_on_page(Platform, pages[i], dir);
         }
     } else {
         struct vm_area_struct *vma;
@@ -416,7 +419,7 @@ cache_op_on_logical(gctPOINTER logical, gctSIZE_T bytes,
             status = logical_to_page(logical, &pages[i]);
             if (status)
                 goto OnExit;
-            status = cache_op_on_page(pages[i], dir);
+            status = cache_op_on_page(Platform, pages[i], dir);
             if (status)
                 goto OnExit;
 
@@ -470,7 +473,7 @@ platform_cache(
 
     /* have access to phys addr, use dma api */
     if (Physical != gcvINVALID_ADDRESS) {
-        dma_sync_single_for_device(gcvNULL,
+        dma_sync_single_for_device(&Platform->device->dev,
                 (dma_addr_t)Physical,
                 Bytes,
                 dir);
@@ -480,9 +483,9 @@ platform_cache(
          * on each page.
          */
         PLINUX_MDL mdl = (PLINUX_MDL)Handle;
-        status = cache_op_on_mdl(mdl, dir);
+        status = cache_op_on_mdl(Platform, mdl, dir);
     } else {
-        status = cache_op_on_logical(Logical, Bytes, dir);
+        status = cache_op_on_logical(Platform, Logical, Bytes, dir);
     }
 
     return status;

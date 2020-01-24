@@ -77,6 +77,8 @@
 #include "gc_hal_kernel_sync.h"
 #endif
 
+#include <linux/platform_device.h>
+
 #define _GC_OBJ_ZONE    gcvZONE_OS
 
 #include "gc_hal_kernel_allocator.h"
@@ -1562,6 +1564,7 @@ gckOS_AllocateNonPagedMemory(
 #endif
     gctBOOL locked = gcvFALSE;
     gceSTATUS status;
+    struct device *dev;
 
     gcmkHEADER_ARG("Os=0x%X InUserSpace=%d *Bytes=%lu",
                    Os, InUserSpace, gcmOPT_VALUE(Bytes));
@@ -1588,6 +1591,8 @@ gckOS_AllocateNonPagedMemory(
 
     mdl->pagedMem = 0;
     mdl->numPages = numPages;
+
+    dev = &Os->device->platform->device->dev;
 
     MEMORY_LOCK(Os);
     locked = gcvTRUE;
@@ -1625,7 +1630,7 @@ gckOS_AllocateNonPagedMemory(
 #if !defined(CONFIG_PPC)
     /* Cache invalidate. */
     dma_sync_single_for_device(
-                gcvNULL,
+                dev,
                 page_to_phys(page),
                 bytes,
                 DMA_FROM_DEVICE);
