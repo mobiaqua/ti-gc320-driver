@@ -246,6 +246,8 @@ endif
 
 ifneq ($(CONFIG_PREEMPT_RT_BASE),)
 EXTRA_CFLAGS += -DgcdRT_KERNEL=1
+else ifneq ($(CONFIG_PREEMPT_RT),)
+EXTRA_CFLAGS += -DgcdRT_KERNEL=1
 else
 EXTRA_CFLAGS += -DgcdRT_KERNEL=0
 endif
