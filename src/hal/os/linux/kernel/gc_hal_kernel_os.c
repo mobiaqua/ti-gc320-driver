@@ -1182,6 +1182,9 @@ gckOS_MapMemory(
 {
     PLINUX_MDL_MAP  mdlMap;
     PLINUX_MDL      mdl = (PLINUX_MDL)Physical;
+#ifndef NO_DMA_COHERENT
+    struct device *dev;
+#endif
 
     gcmkHEADER_ARG("Os=0x%X Physical=0x%X Bytes=%lu", Os, Physical, Bytes);
 
@@ -1277,7 +1280,8 @@ gckOS_MapMemory(
         }
 
 #ifndef NO_DMA_COHERENT
-        if (dma_mmap_wc(gcvNULL,
+        dev = &Os->device->platform->device->dev;
+        if (dma_mmap_wc(dev,
                     mdlMap->vma,
                     mdl->addr,
                     mdl->dmaHandle,
@@ -1599,9 +1603,9 @@ gckOS_AllocateNonPagedMemory(
 
 #ifndef NO_DMA_COHERENT
 #ifdef CONFIG_ARM64
-    addr = dma_alloc_coherent(gcvNULL,
+    addr = dma_alloc_coherent(dev,
 #else
-    addr = dma_alloc_wc(gcvNULL,
+    addr = dma_alloc_wc(dev,
 #endif
             mdl->numPages * PAGE_SIZE,
             &mdl->dmaHandle,
@@ -1727,7 +1731,7 @@ gckOS_AllocateNonPagedMemory(
         }
 
 #ifndef NO_DMA_COHERENT
-        if (dma_mmap_coherent(gcvNULL,
+        if (dma_mmap_coherent(dev,
                 mdlMap->vma,
                 mdl->addr,
                 mdl->dmaHandle,
@@ -1865,6 +1869,8 @@ gceSTATUS gckOS_FreeNonPagedMemory(
 #ifdef NO_DMA_COHERENT
     unsigned size;
     gctPOINTER vaddr;
+#else
+    struct device *dev;
 #endif /* NO_DMA_COHERENT */
 
     gcmkHEADER_ARG("Os=0x%X Bytes=%lu Physical=0x%X Logical=0x%X",
@@ -1882,10 +1888,11 @@ gceSTATUS gckOS_FreeNonPagedMemory(
     MEMORY_LOCK(Os);
 
 #ifndef NO_DMA_COHERENT
+    dev = &Os->device->platform->device->dev;
 #ifdef CONFIG_ARM64
-    dma_free_coherent(gcvNULL,
+    dma_free_coherent(dev,
 #else
-    dma_free_wc(gcvNULL,
+    dma_free_wc(dev,
 #endif
             mdl->numPages * PAGE_SIZE,
             mdl->addr,
