@@ -183,7 +183,7 @@ _NonContiguousAlloc(
 
     if (!pages)
     {
-        pages = __vmalloc(size, GFP_KERNEL | __GFP_DMA32, PAGE_KERNEL);
+        pages = __vmalloc(size, GFP_KERNEL | __GFP_DMA32);
 
         if (!pages)
         {

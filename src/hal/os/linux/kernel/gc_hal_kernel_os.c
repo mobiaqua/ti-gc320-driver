@@ -1076,7 +1076,7 @@ gckOS_AllocateMemory(
     if (Bytes > PAGE_SIZE)
     {
         memory = (gctPOINTER) __vmalloc(Bytes,
-			GFP_KERNEL | __GFP_DMA32, PAGE_KERNEL);
+			GFP_KERNEL | __GFP_DMA32);
     }
     else
     {
