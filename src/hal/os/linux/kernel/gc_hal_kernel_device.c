@@ -1017,7 +1017,7 @@ gckGALDEVICE_Construct(
                     gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
                     }
 
-                    device->registerBases[i] = (gctPOINTER) ioremap_nocache(
+                    device->registerBases[i] = (gctPOINTER) ioremap(
                             physical, device->requestedRegisterMemSizes[i]);
 
                     if (device->registerBases[i] == gcvNULL)
@@ -1320,7 +1320,7 @@ gckGALDEVICE_Construct(
         {
             /* Map internal memory. */
             device->internalLogical
-                = (gctPOINTER) ioremap_nocache(physical, device->internalSize);
+                = (gctPOINTER) ioremap(physical, device->internalSize);
 
             if (device->internalLogical == gcvNULL)
             {
@@ -1351,7 +1351,7 @@ gckGALDEVICE_Construct(
         {
             /* Map external memory. */
             device->externalLogical
-                = (gctPOINTER) ioremap_nocache(physical, device->externalSize);
+                = (gctPOINTER) ioremap(physical, device->externalSize);
 
             if (device->externalLogical == gcvNULL)
             {
