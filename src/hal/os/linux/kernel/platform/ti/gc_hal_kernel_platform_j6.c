@@ -283,6 +283,7 @@ logical_to_page(gctUINTPTR_T logical, struct page **page)
 {
     gceSTATUS status = gcvSTATUS_OK;
     pgd_t *pgd;
+    p4d_t *p4d;
     pmd_t *pmd;
     pud_t *pud;
     pte_t *pte;
@@ -294,7 +295,13 @@ logical_to_page(gctUINTPTR_T logical, struct page **page)
         gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);
     }
 
-    pud = pud_offset(pgd, logical);
+    p4d = p4d_offset(pgd, logical);
+    if (p4d_none(*p4d) || p4d_bad(*p4d)) {
+        gckOS_DebugTrace(gcvLEVEL_ERROR, "Invalid p4d entry\n");
+        gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);
+    }
+
+    pud = pud_offset(p4d, logical);
     if (pud_none(*pud) || pud_bad(*pud)) {
         gckOS_DebugTrace(gcvLEVEL_ERROR, "Invalid pud entry\n");
         gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);

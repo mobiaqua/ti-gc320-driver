@@ -393,6 +393,7 @@ _QueryProcessPageTable(
     spinlock_t *lock;
     gctUINTPTR_T logical = (gctUINTPTR_T)Logical;
     pgd_t *pgd;
+    p4d_t *p4d;
     pud_t *pud;
     pmd_t *pmd;
     pte_t *pte;
@@ -408,7 +409,13 @@ _QueryProcessPageTable(
         return gcvSTATUS_NOT_FOUND;
     }
 
-    pud = pud_offset(pgd, logical);
+    p4d = p4d_offset(pgd, logical);
+    if (p4d_none(*p4d) || p4d_bad(*p4d))
+    {
+        return gcvSTATUS_NOT_FOUND;
+    }
+
+    pud = pud_offset(p4d, logical);
     if (pud_none(*pud) || pud_bad(*pud))
     {
         return gcvSTATUS_NOT_FOUND;
@@ -4824,6 +4831,7 @@ OnError:
                     for (i = 0; i < pageCount; i++)
                     {
                         pgd_t *pgd;
+                        p4d_t *p4d;
                         pud_t *pud;
                         pmd_t *pmd;
 
@@ -4835,7 +4843,15 @@ OnError:
                             gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
                         }
 
-                        pud = pud_offset(pgd, logical);
+                        p4d = p4d_offset(pgd, logical);
+                        if (p4d_none(*p4d) || p4d_bad(*p4d))
+                        {
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid p4d entry at page %d\n", i);
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        pud = pud_offset(p4d, logical);
                         if (pud_none(*pud) || pud_bad(*pud))
                         {
                             gckOS_DebugTrace(gcvLEVEL_ERROR,
