@@ -6583,9 +6583,9 @@ gckOS_GetProfileTick(
     OUT gctUINT64_PTR Tick
     )
 {
-    struct timespec time;
+    struct timespec64 time;
 
-    ktime_get_ts(&time);
+    ktime_get_ts64(&time);
 
     *Tick = time.tv_nsec + time.tv_sec * 1000000000ULL;
 
@@ -6597,7 +6597,7 @@ gckOS_QueryProfileTickRate(
     OUT gctUINT64_PTR TickRate
     )
 {
-    struct timespec res;
+    struct timespec64 res;
 
     res.tv_sec = 0;
     res.tv_nsec = hrtimer_resolution;
