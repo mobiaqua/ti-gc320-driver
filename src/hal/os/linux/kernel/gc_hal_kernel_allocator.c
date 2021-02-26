@@ -304,7 +304,7 @@ _UnmapUserLogical(
                 );
     }
 #else
-    down_write(&current->mm->mmap_sem);
+    mmap_write_lock(current->mm);
     if (do_munmap(current->mm, (unsigned long)Logical, Size) < 0)
     {
         gcmkTRACE_ZONE(
@@ -313,7 +313,7 @@ _UnmapUserLogical(
                 __FUNCTION__, __LINE__
                 );
     }
-    up_write(&current->mm->mmap_sem);
+    mmap_write_unlock(current->mm);
 #endif
 }
 
@@ -533,7 +533,7 @@ _DefaultMapUser(
                     MAP_SHARED,
                     0);
 #else
-    down_write(&current->mm->mmap_sem);
+    mmap_write_lock(current->mm);
 
     mdlMap->vmaAddr = (gctSTRING)do_mmap_pgoff(gcvNULL,
                     0L,
@@ -542,7 +542,7 @@ _DefaultMapUser(
                     MAP_SHARED,
                     0);
 
-    up_write(&current->mm->mmap_sem);
+    mmap_write_unlock(current->mm);
 #endif
 
     gcmkTRACE_ZONE(
@@ -567,13 +567,13 @@ _DefaultMapUser(
         return gcvSTATUS_OUT_OF_MEMORY;
     }
 
-    down_write(&current->mm->mmap_sem);
+    mmap_write_lock(current->mm);
 
     mdlMap->vma = find_vma(current->mm, (unsigned long)mdlMap->vmaAddr);
 
     if (mdlMap->vma == gcvNULL)
     {
-        up_write(&current->mm->mmap_sem);
+        mmap_write_unlock(current->mm);
 
         gcmkTRACE_ZONE(
             gcvLEVEL_INFO, gcvZONE_OS,
@@ -612,7 +612,7 @@ _DefaultMapUser(
                             mdlMap->vma->vm_end - mdlMap->vma->vm_start,
                             mdlMap->vma->vm_page_prot) < 0)
         {
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkTRACE_ZONE(
                 gcvLEVEL_INFO, gcvZONE_OS,
@@ -640,7 +640,7 @@ _DefaultMapUser(
                                 PAGE_SIZE,
                                 mdlMap->vma->vm_page_prot) < 0)
             {
-                up_write(&current->mm->mmap_sem);
+                mmap_write_unlock(current->mm);
 
                 mdlMap->vmaAddr = gcvNULL;
 
@@ -653,7 +653,7 @@ _DefaultMapUser(
         }
     }
 
-    up_write(&current->mm->mmap_sem);
+    mmap_write_unlock(current->mm);
 
     gcmkFOOTER_NO();
     return gcvSTATUS_OK;

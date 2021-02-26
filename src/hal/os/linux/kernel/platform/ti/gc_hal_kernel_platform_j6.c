@@ -346,7 +346,7 @@ cache_op_on_logical(gckPLATFORM Platform, gctPOINTER logical, gctSIZE_T bytes,
     memset(pages, 0, sizeof(struct page *) * pageCount);
 
     /* lock down user memory */
-    down_read(&current->mm->mmap_sem);
+    mmap_read_lock(current->mm);
 
     numPagesMapped = get_user_pages(
             startAddr, pageCount, FOLL_WRITE, pages, gcvNULL);
@@ -428,7 +428,7 @@ cache_op_on_logical(gckPLATFORM Platform, gctPOINTER logical, gctSIZE_T bytes,
     }
 
 OnExit:
-    up_read(&current->mm->mmap_sem);
+    mmap_read_unlock(current->mm);
 
     kfree(pages);
 

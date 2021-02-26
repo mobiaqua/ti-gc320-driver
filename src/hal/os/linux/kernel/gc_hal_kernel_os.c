@@ -1221,7 +1221,7 @@ gckOS_MapMemory(
                     MAP_SHARED,
                     0);
 #else
-        down_write(&current->mm->mmap_sem);
+        mmap_write_lock(current->mm);
 
         mdlMap->vmaAddr = (char *)do_mmap_pgoff(gcvNULL,
                     0L,
@@ -1230,7 +1230,7 @@ gckOS_MapMemory(
                     MAP_SHARED,
                     0);
 
-        up_write(&current->mm->mmap_sem);
+        mmap_write_unlock(current->mm);
 #endif
 
         if (IS_ERR(mdlMap->vmaAddr))
@@ -1257,7 +1257,7 @@ gckOS_MapMemory(
             return gcvSTATUS_OUT_OF_MEMORY;
         }
 
-        down_write(&current->mm->mmap_sem);
+        mmap_write_lock(current->mm);
 
         mdlMap->vma = find_vma(current->mm, (unsigned long)mdlMap->vmaAddr);
 
@@ -1271,7 +1271,7 @@ gckOS_MapMemory(
 
             mdlMap->vmaAddr = gcvNULL;
 
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             MEMORY_UNLOCK(Os);
 
@@ -1287,7 +1287,7 @@ gckOS_MapMemory(
                     mdl->dmaHandle,
                     mdl->numPages * PAGE_SIZE) < 0)
         {
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkTRACE(
                 gcvLEVEL_ERROR,
@@ -1315,7 +1315,7 @@ gckOS_MapMemory(
                             mdl->numPages*PAGE_SIZE,
                             mdlMap->vma->vm_page_prot) < 0)
         {
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkTRACE(
                 gcvLEVEL_ERROR,
@@ -1332,7 +1332,7 @@ gckOS_MapMemory(
         }
 #endif
 
-        up_write(&current->mm->mmap_sem);
+        mmap_write_unlock(current->mm);
     }
 
     MEMORY_UNLOCK(Os);
@@ -1688,7 +1688,7 @@ gckOS_AllocateNonPagedMemory(
                 MAP_SHARED,
                 0);
 #else
-        down_write(&current->mm->mmap_sem);
+        mmap_write_lock(current->mm);
 
         mdlMap->vmaAddr = (gctSTRING) do_mmap_pgoff(gcvNULL,
                 0L,
@@ -1697,7 +1697,7 @@ gckOS_AllocateNonPagedMemory(
                 MAP_SHARED,
                 0);
 
-        up_write(&current->mm->mmap_sem);
+        mmap_write_unlock(current->mm);
 #endif
 
         if (IS_ERR(mdlMap->vmaAddr))
@@ -1713,7 +1713,7 @@ gckOS_AllocateNonPagedMemory(
             gcmkONERROR(gcvSTATUS_OUT_OF_MEMORY);
         }
 
-        down_write(&current->mm->mmap_sem);
+        mmap_write_lock(current->mm);
 
         mdlMap->vma = find_vma(current->mm, (unsigned long)mdlMap->vmaAddr);
 
@@ -1725,7 +1725,7 @@ gckOS_AllocateNonPagedMemory(
                 __FUNCTION__, __LINE__
                 );
 
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
         }
@@ -1743,7 +1743,7 @@ gckOS_AllocateNonPagedMemory(
                 __FUNCTION__, __LINE__
                 );
 
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
         }
@@ -1764,13 +1764,13 @@ gckOS_AllocateNonPagedMemory(
                 __FUNCTION__, __LINE__
                 );
 
-            up_write(&current->mm->mmap_sem);
+            mmap_write_unlock(current->mm);
 
             gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
         }
 #endif /* NO_DMA_COHERENT */
 
-        up_write(&current->mm->mmap_sem);
+        mmap_write_lock(current->mm);
 
         *Logical = mdlMap->vmaAddr;
     }
@@ -4751,7 +4751,7 @@ OnError:
         else
         {
             /* Get the user pages. */
-            down_read(&current->mm->mmap_sem);
+            mmap_read_lock(current->mm);
 
             result = get_user_pages(memory & PAGE_MASK,
                     pageCount,
@@ -4760,7 +4760,7 @@ OnError:
                     gcvNULL
                     );
 
-            up_read(&current->mm->mmap_sem);
+            mmap_read_unlock(current->mm);
 
             if (result <=0 || result < pageCount)
             {

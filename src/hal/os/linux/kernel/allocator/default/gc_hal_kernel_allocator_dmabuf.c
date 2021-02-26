@@ -215,11 +215,11 @@ _DmabufMapUser(
         gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
     }
 
-    down_write(&current->mm->mmap_sem);
+    mmap_write_lock(current->mm);
 
     mdlMap->vma = find_vma(current->mm, (unsigned long)mdlMap->vmaAddr);
 
-    up_write(&current->mm->mmap_sem);
+    mmap_write_unlock(current->mm);
 
     if (mdlMap->vma == gcvNULL)
     {
