@@ -7030,11 +7030,7 @@ gckOS_WaitSignal(
 
     might_sleep();
 
-#if gcdRT_KERNEL
     raw_spin_lock_irq(&signal->obj.wait.lock);
-#else
-    spin_lock_irq(&signal->obj.wait.lock);
-#endif
 
     if (signal->obj.done)
     {
@@ -7056,7 +7052,6 @@ gckOS_WaitSignal(
             ? MAX_SCHEDULE_TIMEOUT
             : Wait * HZ / 1000;
 
-#if gcdRT_KERNEL
         DECLARE_SWAITQUEUE(wait);
         /* using __prepare_to_swait definition, as its not exported. This
          * is same as `wait_for_completion()` except for the manualReset.
@@ -7064,15 +7059,6 @@ gckOS_WaitSignal(
         wait.task = current;
         if (list_empty(&wait.task_list))
             list_add(&wait.task_list, &signal->obj.wait.task_list);
-#else
-        DECLARE_WAITQUEUE(wait, current);
-        wait.flags |= WQ_FLAG_EXCLUSIVE;
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(4,13,0)
-        __add_wait_queue_entry_tail(&signal->obj.wait, &wait);
-#else
-	__add_wait_queue_tail(&signal->obj.wait, &wait);
-#endif
-#endif
 
         while (gcvTRUE)
         {
@@ -7085,19 +7071,11 @@ gckOS_WaitSignal(
 
             __set_current_state(TASK_INTERRUPTIBLE);
 
-#if gcdRT_KERNEL
             raw_spin_unlock_irq(&signal->obj.wait.lock);
-#else
-            spin_unlock_irq(&signal->obj.wait.lock);
-#endif
 
             timeout = schedule_timeout(timeout);
 
-#if gcdRT_KERNEL
             raw_spin_lock_irq(&signal->obj.wait.lock);
-#else
-            spin_lock_irq(&signal->obj.wait.lock);
-#endif
 
             if (signal->obj.done)
             {
@@ -7117,21 +7095,13 @@ gckOS_WaitSignal(
             }
         }
 
-#if gcdRT_KERNEL
         /* using __finish_swait definition, as its not exported */
         __set_current_state(TASK_RUNNING);
         if (!list_empty(&wait.task_list))
             list_del_init(&wait.task_list);
-#else
-        __remove_wait_queue(&signal->obj.wait, &wait);
-#endif
     }
 
-#if gcdRT_KERNEL
     raw_spin_unlock_irq(&signal->obj.wait.lock);
-#else
-    spin_unlock_irq(&signal->obj.wait.lock);
-#endif
 OnError:
     /* Return status. */
     gcmkFOOTER_ARG("Signal=0x%X status=%d", Signal, status);
