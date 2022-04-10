@@ -59,7 +59,12 @@
 #include <gc_hal_kernel_linux.h>
 #include <linux/spinlock.h>
 #include <linux/time.h>
+#include <linux/version.h>
+#if (LINUX_VERSION_CODE >= KERNEL_VERSION(5,16,0))
+#include <linux/stdarg.h>
+#else
 #include <stdarg.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
