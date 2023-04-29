@@ -775,7 +775,11 @@ static int drv_mmap(
 
 #if !gcdPAGED_MEMORY_CACHEABLE
     vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,3,0)
+    vm_flags_set(vma, gcdVM_FLAGS);
+#else
     vma->vm_flags    |= gcdVM_FLAGS;
+#endif
 #endif
     vma->vm_pgoff     = 0;
 

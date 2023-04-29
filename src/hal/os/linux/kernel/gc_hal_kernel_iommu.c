@@ -216,7 +216,11 @@ gckIOMMU_Map(
     gcmkHEADER_ARG("DomainAddress=%#X, Physical=%#X, Bytes=%d",
                    DomainAddress, Physical, Bytes);
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,3,0)
+    ret = iommu_map(Iommu->domain, DomainAddress, Physical, Bytes, 0, GFP_KERNEL);
+#else
     ret = iommu_map(Iommu->domain, DomainAddress, Physical, Bytes, 0);
+#endif
 
     if (ret)
     {

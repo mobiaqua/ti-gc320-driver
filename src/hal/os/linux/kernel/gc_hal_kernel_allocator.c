@@ -587,7 +587,11 @@ _DefaultMapUser(
         return gcvSTATUS_OUT_OF_RESOURCES;
     }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,3,0)
+    vm_flags_set(mdlMap->vma, gcdVM_FLAGS);
+#else
     mdlMap->vma->vm_flags |= gcdVM_FLAGS;
+#endif
 
     if (Cacheable == gcvFALSE)
     {
