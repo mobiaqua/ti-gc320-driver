@@ -948,7 +948,11 @@ static int drv_init(void)
     }
 
     /* Create the device class. */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,4,0)
+    device_class = class_create("ti-gc320");
+#else
     device_class = class_create(THIS_MODULE, CLASS_NAME);
+#endif
 
     if (IS_ERR(device_class))
     {
