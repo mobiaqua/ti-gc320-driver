@@ -355,8 +355,13 @@ cache_op_on_logical(gckPLATFORM Platform, gctPOINTER logical, gctSIZE_T bytes,
     /* lock down user memory */
     mmap_read_lock(current->mm);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,5,0))
     numPagesMapped = get_user_pages(
             startAddr, pageCount, FOLL_WRITE, pages, gcvNULL);
+#else
+    numPagesMapped = get_user_pages(
+            startAddr, pageCount, FOLL_WRITE, pages);
+#endif
 
     if (numPagesMapped == pageCount) {
         for (i = 0; i < pageCount; i++) {

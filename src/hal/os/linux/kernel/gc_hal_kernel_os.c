@@ -4760,12 +4760,20 @@ OnError:
             /* Get the user pages. */
             mmap_read_lock(current->mm);
 
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,5,0))
             result = get_user_pages(memory & PAGE_MASK,
                     pageCount,
                     FOLL_WRITE,
                     pages,
                     gcvNULL
                     );
+#else
+            result = get_user_pages(memory & PAGE_MASK,
+                    pageCount,
+                    FOLL_WRITE,
+                    pages
+                    );
+#endif
 
             mmap_read_unlock(current->mm);
 
