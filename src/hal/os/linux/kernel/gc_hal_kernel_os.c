@@ -390,6 +390,7 @@ _QueryProcessPageTable(
     OUT gctPHYS_ADDR_T * Address
     )
 {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,5,0))
     spinlock_t *lock;
     gctUINTPTR_T logical = (gctUINTPTR_T)Logical;
     pgd_t *pgd;
@@ -441,6 +442,27 @@ _QueryProcessPageTable(
 
     *Address = (pte_pfn(*pte) << PAGE_SHIFT) | (logical & ~PAGE_MASK);
     pte_unmap_unlock(pte, lock);
+#else
+    spinlock_t *ptl;
+    pte_t *ptep;
+    struct vm_area_struct *vma;
+    gctUINTPTR_T logical = (gctUINTPTR_T)Logical;
+
+    if (!current->mm)
+    {
+        return gcvSTATUS_NOT_FOUND;
+    }
+
+    vma = find_vma(current->mm, logical);
+    if (!vma || !(vma->vm_flags & (VM_IO | VM_PFNMAP)))
+        return gcvSTATUS_NOT_FOUND;
+
+    if (follow_pte(vma->vm_mm, logical, &ptep, &ptl) < 0)
+        return gcvSTATUS_NOT_FOUND;
+
+    *Address = (pte_pfn(ptep_get(ptep)) << PAGE_SHIFT) | (logical & ~PAGE_MASK);
+    pte_unmap_unlock(ptep, ptl);
+#endif
 
     return gcvSTATUS_OK;
 }
@@ -4838,6 +4860,7 @@ OnError:
 
                     for (i = 0; i < pageCount; i++)
                     {
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,5,0))
                         pgd_t *pgd;
                         p4d_t *p4d;
                         pud_t *pud;
@@ -4887,6 +4910,39 @@ OnError:
 
                         pages[i] = pte_page(*pte);
                         pte_unmap_unlock(pte, ptl);
+#else
+                        gctUINT32 pfn;
+
+                        if (!(vma->vm_flags & (VM_IO | VM_PFNMAP)))
+                        {
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pte entry at page %d\n", i);
+
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        if (follow_pte(vma->vm_mm, logical, &pte, &ptl) < 0)
+                        {
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pte entry at page %d\n", i);
+
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        pfn = pte_pfn(ptep_get(pte));
+                        if (!pfn_valid(pfn))
+                        {
+                            pte_unmap_unlock(pte, ptl);
+                            gckOS_DebugTrace(gcvLEVEL_ERROR,
+                                    "Invalid pte entry at page %d\n", i);
+
+                            gcmkONERROR(gcvSTATUS_OUT_OF_RESOURCES);
+                        }
+
+                        pages[i] = pfn_to_page(pfn);
+                        get_page(pages[i]);
+                        pte_unmap_unlock(pte, ptl);
+#endif
 
                         /*
                          * TODO: pages[i] is NULL for Tiler memory. Need to

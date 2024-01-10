@@ -282,6 +282,7 @@ static gceSTATUS
 logical_to_page(gctUINTPTR_T logical, struct page **page)
 {
     gceSTATUS status = gcvSTATUS_OK;
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(6,5,0))
     pgd_t *pgd;
     p4d_t *p4d;
     pmd_t *pmd;
@@ -319,11 +320,46 @@ logical_to_page(gctUINTPTR_T logical, struct page **page)
             goto UnLock;
     }
     *page = pte_page(*pte);
+    get_page(*page);
 
 UnLock:
     pte_unmap_unlock(pte, ptl);
 OnError:
     return status;
+#else
+    spinlock_t *ptl;
+    pte_t *ptep;
+    struct vm_area_struct *vma;
+    gctUINT32 pfn;
+
+    vma = find_vma(current->mm, logical);
+    if (!vma || !(vma->vm_flags & (VM_IO | VM_PFNMAP)))
+    {
+        gckOS_DebugTrace(gcvLEVEL_ERROR, "Invalid pte entry\n");
+        gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);
+    }
+
+    if (follow_pte(vma->vm_mm, logical, &ptep, &ptl) < 0)
+    {
+        gckOS_DebugTrace(gcvLEVEL_ERROR, "Invalid pte entry\n");
+        gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);
+    }
+
+    pfn = pte_pfn(ptep_get(ptep));
+    if (!pfn_valid(pfn))
+    {
+        pte_unmap_unlock(ptep, ptl);
+        gckOS_DebugTrace(gcvLEVEL_ERROR, "Invalid pte entry\n");
+        gcmkONERROR(gcvSTATUS_INVALID_ADDRESS);
+    }
+
+    *page = pfn_to_page(pfn);
+
+    pte_unmap_unlock(ptep, ptl);
+
+OnError:
+    return status;
+#endif
 }
 
 static gceSTATUS
